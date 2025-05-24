@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hacker Terminal Simulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+
+  body {
+    margin: 0;
+    background: #0f0f0f;
+    color: #00ff00;
+    font-family: 'Source Code Pro', monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #terminal {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
+  }
+
+  #input-line {
+    display: flex;
+    padding: 10px 20px;
+    border-top: 1px solid #004400;
+  }
+
+  #prompt {
+    flex-shrink: 0;
+  }
+
+  #cmdline {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    color: #00ff00;
+    font-family: inherit;
+    font-size: 1em;
+    outline: none;
+    caret-color: #00ff00;
+  }
+
+  .blinking-cursor {
+    display: inline-block;
+    background-color: #00ff00;
+    width: 8px;
+    animation: blink 1s steps(2, start) infinite;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    to {
+      visibility: hidden;
+    }
+  }
+
+  .output {
+    margin: 0;
+  }
+
+  .loading {
+    display: inline-block;
+    font-size: 18px;
+  }
+
+  /* Scrollbar */
+  #terminal::-webkit-scrollbar {
+    width: 8px;
+  }
+  #terminal::-webkit-scrollbar-thumb {
+    background: #00ff00;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+<div id="terminal" aria-live="polite" aria-label="Hacker terminal output"></div>
+<div id="input-line">
+  <div id="prompt">root@hacker:~$</div>
+  <input type="text" id="cmdline" autofocus autocomplete="off" spellcheck="false" aria-label="Command line input" />
+  <div class="blinking-cursor"></div>
+</div>
+
+<script>
+  const terminal = document.getElementById('terminal');
+  const cmdLine = document.getElementById('cmdline');
+  const prompt = 'root@hacker:~$ ';
+
+  const commands = {
+    help: "Available commands:\\nhelp - show this help message\\nscan - scan for open ports\\nhack - simulate hacking a system\\ncredits - show credits\\nclear - clear the terminal",
+    credits: "Hacker Terminal Simulator by BLACKBOXAI. Totally cool and secure!",
+    scan: "Scanning target...\\nPort 22: Open (SSH)\\nPort 80: Open (HTTP)\\nPort 443: Open (HTTPS)\\nPort 8080: Closed\\nScan complete.",
+    hack: "Initializing hack sequence...\\nConnecting to target...\\nBypassing firewall...\\nInjecting payload...\\nAccess granted!\\nRetrieving data...\\nDone! Mission accomplished.",
+    clear: ""
+  };
+
+  let commandHistory = [];
+  let historyIndex = 0;
+
+  function appendOutput(text, isCommand=false) {
+    const outputLine = document.createElement('div');
+    outputLine.className = 'output';
+    outputLine.textContent = text;
+    if(isCommand) outputLine.style.color = '#fff';
+    terminal.appendChild(outputLine);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function clearTerminal() {
+    terminal.innerHTML = '';
+  }
+
+  function processCommand(cmd) {
+    if (cmd.trim() === '') {
+      return;
+    }
+    appendOutput(prompt + cmd, true);
+    let lowerCmd = cmd.toLowerCase();
+
+    if(lowerCmd in commands) {
+      if(lowerCmd === 'clear') {
+        clearTerminal();
+        return;
+      }
+      // Simulate typing animation for hack and scan commands
+      if(lowerCmd === 'hack' || lowerCmd === 'scan') {
+        let lines = commands[lowerCmd].split('\\n');
+        let i = 0;
+        const interval = setInterval(() => {
+          if(i < lines.length) {
+            appendOutput(lines[i]);
+            i++;
+          } else {
+            clearInterval(interval);
+          }
+        }, 600);
+      } else {
+        appendOutput(commands[lowerCmd]);
+      }
+    } else {
+      appendOutput('Command not found: ' + cmd);
+    }
+  }
+
+  cmdLine.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') {
+      let cmd = cmdLine.value;
+      processCommand(cmd);
+      commandHistory.push(cmd);
+      historyIndex = commandHistory.length;
+      cmdLine.value = '';
+    } else if(e.key === 'ArrowUp') {
+      if(historyIndex > 0) {
+        historyIndex--;
+        cmdLine.value = commandHistory[historyIndex];
+      }
+      e.preventDefault();
+    } else if(e.key === 'ArrowDown') {
+      if(historyIndex < commandHistory.length -1) {
+        historyIndex++;
+        cmdLine.value = commandHistory[historyIndex];
+      } else {
+        historyIndex = commandHistory.length;
+        cmdLine.value = '';
+      }
+      e.preventDefault();
+    }
+  });
+
+  // Initial welcome message with typing effect
+  const welcomeLines = [
+    'Welcome to Hacker Terminal Simulator!',
+    'Type "help" for available commands.'
+  ];
+  let welcomeIndex = 0;
+
+  function typeWelcome() {
+    if(welcomeIndex < welcomeLines.length) {
+      appendOutput(welcomeLines[welcomeIndex]);
+      welcomeIndex++;
+      setTimeout(typeWelcome, 700);
+    }
+  }
+  typeWelcome();
+</script>
+</body>
+</html>
+
